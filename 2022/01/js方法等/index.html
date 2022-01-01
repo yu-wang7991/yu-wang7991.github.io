@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<!-- Head tag -->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!--Description-->
+  
+  <meta name="description" content="分享Web开发中的技术文章，分享生活中的灵感与创意。">
+  
+
+  <!--Author-->
+  
+
+  <!--Open Graph Title-->
+  
+      <meta property="og:title" content="JavaScript 中常用的方法等"/>
+  
+  <!--Open Graph Description-->
+  
+      <meta property="og:description" content="分享Web开发中的技术文章，分享生活中的灵感与创意。" />
+  
+  <!--Open Graph Site Name-->
+  <meta property="og:site_name" content="博客"/>
+  <!--Type page-->
+  
+      <meta property="og:type" content="article" />
+  
+  <!--Page Cover-->
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- Title -->
+  
+  <title>JavaScript 中常用的方法等 - 博客</title>
+
+
+  <link rel="shortcut icon" href="https://cdn.pixabay.com/photo/2021/08/26/10/51/cliff-6575844_1280.jpg">
+
+  <!-- Custom CSS/Sass -->
+  
+<link rel="stylesheet" href="/css/style.css">
+
+
+  <!----------------------------
+  https://github.com/GallenHu/hexo-theme-Daily
+
+ _____            _   _
+|  __ \          (_) | |
+| |  | |   __ _   _  | |  _   _
+| |  | |  / _` | | | | | | | | |
+| |__| | | (_| | | | | | | |_| |
+|_____/   \__,_| |_| |_|  \__, |
+                          __/ |
+                         |___/
+
+    --------------------------->
+
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<body>
+
+  <!-- Nav -->
+  <header class="site-header">
+  <div class="header-inside">
+    <div class="logo">
+      <a href="/" rel="home">
+        
+        <img src="https://cdn.pixabay.com/photo/2021/08/26/10/51/cliff-6575844_1280.jpg" alt="博客" height="60">
+        
+      </a>
+    </div>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse">
+        <ul class="navbar-nav">
+          
+          
+            <li>
+              <a href="/.">
+                
+                  家
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/archives">
+                
+                  归档
+                
+              </a>
+            </li>
+          
+        </ul>
+      </div>
+      <!-- /.navbar-collapse -->
+    </nav>
+    <div class="button-wrap">
+      <button class="menu-toggle">Primary Menu</button>
+    </div>
+  </div>
+</header>
+
+
+  <!-- Main Content -->
+  <div class="content-area">
+  <div class="post">
+    <!-- Post Content -->
+    <div class="container">
+      <article>
+        <!-- Title date & tags -->
+        <div class="post-header">
+          <h1 class="entry-title">
+            JavaScript 中常用的方法等
+            
+          </h1>
+          <p class="posted-on">
+          2022-01-01
+          </p>
+          <div class="tags-links">
+            
+              
+                <a href="/tags/javascript/" rel="tag">
+                  javascript
+                </a>
+              
+            
+          </div>
+        </div>
+        <!-- Post Main Content -->
+        <div class="entry-content has_line_number">
+          <p>JavaScript 中常用的方法汇总</p>
+<a id="more"></a>
+
+<h5 id="object-keys"><a href="#object-keys" class="headerlink" title="object.keys"></a>object.keys</h5><p>遍历对象的属性名返回一个新数组</p>
+<h5 id="object-difineProperty"><a href="#object-difineProperty" class="headerlink" title="object.difineProperty"></a>object.difineProperty</h5><p>第一个参数对象 ：目标（给哪个对象添加属性）</p>
+<p>第二个参数字符串 ：名字（属性名叫什么）</p>
+<p>第三个参数类型是对象：配置项 {enumerable:true；控制属性是否可枚举，默认值 false。writable:true;控制属性是否可修改，默认 false。configurable:true;控制属性可删除，默认 false。}</p>
+<p>数据代理案例</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> a = &#123;</span><br><span class="line">  b:<span class="string">"1"</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">let</span> c = <span class="string">"2"</span></span><br><span class="line"><span class="built_in">Object</span>.defineProprrty(a,<span class="string">"c"</span>,&#123;</span><br><span class="line">  <span class="keyword">get</span>()&#123;</span><br><span class="line">    <span class="keyword">return</span> c</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">set</span>(value)&#123;</span><br><span class="line">  <span class="keyword">return</span> c = value</span><br><span class="line">&#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<h5 id="和-运算符"><a href="#和-运算符" class="headerlink" title="?.和??运算符"></a>?.和??运算符</h5><p>??和||类似但是不同的是逻辑或会在左侧为假值时返回右侧的操作符而？？只会在左侧为 null 和 undefined 时返回右侧</p>
+<p><code>?.</code>主要用于在多层的 object/array 进行取值和函数调用，一般如果左边的值为 undefined 和 null 时会报错，但是加上?.就不会报错了</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> b;</span><br><span class="line">b?.map(<span class="function">(<span class="params">i</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(i);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h5 id="for-in-和-for-of"><a href="#for-in-和-for-of" class="headerlink" title="for in 和 for of"></a>for in 和 for of</h5><p>for in</p>
+<p>1.for in 更适合遍历对象，因为 for in 利用索引遍历，不能进行几何运算</p>
+<p>2.会遍历数组的所有可枚举值，包括原型</p>
+<p>for of</p>
+<p>1.for of 遍历的是数组元素值，而且只是数组内的元素，不包括原型</p>
+<p>2.for of 不能遍历对象，只能遍历有迭代器对象（iterator）的集合，如数组，字符串,map,set 等</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// for in</span></span><br><span class="line"><span class="keyword">var</span> obj = &#123; <span class="attr">a</span>: <span class="number">1</span>, <span class="attr">b</span>: <span class="number">2</span>, <span class="attr">c</span>: <span class="number">3</span> &#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">let</span> key <span class="keyword">in</span> obj) &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(key);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// a b c</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//for of</span></span><br><span class="line"><span class="keyword">const</span> array1 = [<span class="string">"a"</span>, <span class="string">"b"</span>, <span class="string">"c"</span>];</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">const</span> val <span class="keyword">of</span> array1) &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(val);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// a b c</span></span><br></pre></td></tr></table></figure>
+
+<p>hasOwnProperty()</p>
+<p>可以判断某属性是不是该对象的实例属性</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> arr = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];</span><br><span class="line"><span class="built_in">Array</span>.prototype.a = <span class="number">123</span>;</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">let</span> index <span class="keyword">in</span> arr) &#123;</span><br><span class="line">  <span class="keyword">if</span> (arr.hasOwnProperty(index)) &#123;</span><br><span class="line">    <span class="keyword">let</span> res = arr[index];</span><br><span class="line">    <span class="built_in">console</span>.log(res);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 1 2 3</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="Symbol"><a href="#Symbol" class="headerlink" title="Symbol"></a>Symbol</h5><p>这个函数会动态的生成一个匿名、全局唯一的值。</p>
+<p>symbol 的基本用处</p>
+<p>1.避免对象的键被覆盖</p>
+<p>2.避免魔术字符串</p>
+<h5 id="模糊搜索"><a href="#模糊搜索" class="headerlink" title="模糊搜索"></a>模糊搜索</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F;vue计算属性写法</span><br><span class="line">computed:&#123;</span><br><span class="line">	return this.list.filter(i&#x3D;&gt;&#123;</span><br><span class="line">		return i.name.indexof(this.inputValue) !&#x3D;&#x3D; -1</span><br><span class="line">	&#125;)</span><br><span class="line">&#125;</span><br><span class="line">&#x2F;&#x2F;计算属性初始化就会执行一次，indexof（）这时候还没输入，所以indexof（&#39;&#39;）返回全部</span><br></pre></td></tr></table></figure>
+
+<h5 id="indexof"><a href="#indexof" class="headerlink" title="indexof()"></a>indexof()</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F;indexOf() 方法可返回某个指定的字符串值在字符串中首次出现的位置。</span><br><span class="line">stringObject.indexOf(searchvalue,fromindex)</span><br><span class="line">fromindex 非必填 规定在字符串中开始检索的位置</span><br></pre></td></tr></table></figure>
+
+<h5 id="filter"><a href="#filter" class="headerlink" title="filter()"></a>filter()</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Array.filter() 三个参数 item index arr</span><br><span class="line">1.创建一个新的数组</span><br><span class="line">2.必须有返回值 return</span><br><span class="line">3.和map不同的是符合条件返回true 否则false</span><br><span class="line"></span><br><span class="line">方法创建一个新的数组，新数组中的元素是通过检查指定数组中符合条件的所有元素。</span><br></pre></td></tr></table></figure>
+
+<h5 id="sort"><a href="#sort" class="headerlink" title="sort()"></a>sort()</h5><p>Array.sort() 两个参数 a b</p>
+<p>1.改变原数据</p>
+<p>2.a-b 升序 b-a 降序</p>
+<p>3.写回调函数时要有返回值</p>
+<h5 id="Push"><a href="#Push" class="headerlink" title="Push()"></a>Push()</h5><p>往数组末尾加一个或多个元素 返回改变后数组的长度</p>
+<h5 id="unshift"><a href="#unshift" class="headerlink" title="unshift()"></a>unshift()</h5><p>方法可向数组的开头添加一个或更多元素，并返回新的长度 返回改变后数组的长度</p>
+<h5 id="splice"><a href="#splice" class="headerlink" title="splice()"></a>splice()</h5><p>方法向/从数组添加/删除项目，并返回删除的项目。</p>
+<p>三个参数</p>
+<p>第一个从什么地方添加或删除写 index，如果写负数就是从后面开始</p>
+<p>第二个 删除多少个 写 0 就是不删 或者不写也是不删</p>
+<p>第三个 需要添加到数组的新项目</p>
+<h5 id="Shift"><a href="#Shift" class="headerlink" title="Shift()"></a>Shift()</h5><p>删除数组中的第一个元素 改变原数组</p>
+<h5 id="reverse"><a href="#reverse" class="headerlink" title="reverse()"></a>reverse()</h5><p>方法用于颠倒数组中元素的顺序。</p>
+
+        </div>
+      </article>
+    </div>
+    <!-- Comments -->
+    <div class="container">
+      
+<section id="comment">
+  <!-- <h1 class="title">留言</h1> -->
+
+  
+  <div id="disqus_thread">
+    <script type="text/javascript">
+    var disqus_config = function () {
+          this.page.url = window.location.href;
+          this.page.identifier = 'post-js方法等';
+          this.page.title = 'JavaScript 中常用的方法等';
+      };
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript" target="_blank" rel="noopener">comments powered by Disqus.</a></noscript>
+  </div>
+  
+</section>
+
+
+    </div>
+    <!-- Pre or Next -->
+    <div class="nav-links">
+      
+      
+        <div class="nav-next">
+          <a href="/2021/04/vue/" rel="prev">下一页 <span class="meta-arraw meta-arraw-right"></span></a>
+        </div>
+      
+    </div>
+
+  </div>
+</div>
+
+
+  <!-- Footer -->
+  <!-- Footer-widgets -->
+<div class="footer-widgets">
+  <div class="row inside-wrapper">
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">关于本站</h1>
+        <div class="custom-widget-content">
+          
+          <p align="left">分享Web开发中的技术文章，分享生活中的灵感与创意，鼓励阅读，不读书则愚。</p>
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">与我联系</h1>
+        <div class="widget-text">
+          
+            
+              <a href="https://github.com/yu-wang7991" class="icon icon-github" target="_blank">github</a>
+            
+          
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">站内搜索</h1>
+        <div class="widget-text">
+          <form onSubmit="return appDaily.submitSearch('')">
+            <p>
+              <input type="text" placeholder="search..." id="homeSearchInput">
+            </p>
+            <!-- <input type="submit" value="GO"> -->
+          </form>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+<!-- Footer -->
+<footer class="site-info">
+  <p>
+    <span>博客 &copy; 2022</span>
+    
+      <span class="split">|</span>
+      <span>Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> with Theme <a href="https://github.com/GallenHu/hexo-theme-Daily" target="_blank">Daily</a></span>
+    
+  </p>
+</footer>
+
+
+  <!-- After footer scripts -->
+  <!-- scripts -->
+
+<script src="/js/app.js"></script>
+
+
+<script>
+  var disqus_shortname = 'hinpc';
+
+  
+  var disqus_url = 'http://yu-wang7991.github.io/2022/01/js%E6%96%B9%E6%B3%95%E7%AD%89/';
+  
+
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<!-- baidu_analytics start -->
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?329f0d1bce0a1973b19c15ff3c8c3bc8";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+<!-- baidu_analytics end -->
+
+
+
+
+</body>
+
+</html>
