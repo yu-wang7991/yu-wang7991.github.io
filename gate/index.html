@@ -123,7 +123,7 @@ select option{color:#333;background:#fff}
   <div class="event-no-data">加载中...</div>
 </div>
 
-<div class="section-title" style="margin-top:4px">全部站点（卡片内为近24小时水位/流量数据表，第三列为流量）</div>
+  <div class="section-title" id="siteListTitle" style="margin-top:4px">全部站点</div>
 <div class="gate-list" id="gateList"></div>
 
 <!-- 全屏遮罩 -->
@@ -141,6 +141,7 @@ select option{color:#333;background:#fff}
 
 <script>
 const BASE='http://swsq.jswater.org.cn:9088/jsswxxSSI';
+const IS_HTTPS = location.protocol === 'https:';
 
 const SITES=[
   {id:'030cd76d3fc545aeb4dac8b6fced6478',name:'万福闸'},
@@ -272,6 +273,7 @@ function checkImage(img){ return img.naturalWidth > 1 && img.naturalHeight > 1; 
 
 function loadImg(id, type){
   return new Promise(resolve => {
+    if(IS_HTTPS) return resolve({id, type, hasData: false, img: null, blocked: true});
     const img = new Image();
     img.onload = () => resolve({id, type, hasData: checkImage(img), img});
     img.onerror = () => resolve({id, type, hasData: false, img: null});
@@ -387,6 +389,26 @@ async function refreshAll(){
   btn.textContent = '...';
   document.getElementById('updateTime').textContent = '刷新中...';
 
+  if(IS_HTTPS){
+    // HTTPS环境下图片无法加载，仅依赖gate_scan.json数据
+    SITES.forEach(s => { gateState[s.id] = 'closed'; });
+    if(scanData && scanData.sites){
+      scanData.sites.forEach(s => {
+        const site = SITES.find(x => x.id === s.id);
+        if(site && s.is_open) gateState[s.id] = 'open';
+      });
+    }
+    updateStats();
+    sortList();
+    document.getElementById('updateTime').textContent = '更新: ' + (scanData ? scanData.update_time : new Date().toLocaleTimeString('zh-CN'));
+    btn.disabled = false;
+    btn.textContent = '刷新';
+    // HTTPS下不自动刷新图片
+    const v = parseInt(document.getElementById('interval').value);
+    if(v > 0) timer = setTimeout(refreshAll, v * 1000);
+    return;
+  }
+
   const results = await Promise.all(SITES.map(s => checkSite(s)));
   results.forEach(renderSite);
   updateStats();
@@ -449,10 +471,20 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('overlay').addEventListener('click', e => {
     if(e.target === e.currentTarget) closeOverlay();
   });
-  // 加载扫描数据（今日有流量站点）
-  setTimeout(loadScanData, 500);
-  // 开始实时检测
-  setTimeout(refreshAll, 300);
+  if(IS_HTTPS){
+    // HTTPS环境提示
+    document.getElementById('siteListTitle').textContent = '全部站点（HTTPS环境下仅显示扫描数据，详细图片请本地访问）';
+    // 隐藏图片相关UI
+    document.querySelectorAll('.hist-img-wrap, .chart-toggle, .gate-link').forEach(el => el.style.display = 'none');
+    // 仅加载scan数据
+    setTimeout(async () => {
+      await loadScanData();
+      setTimeout(refreshAll, 200);
+    }, 300);
+  } else {
+    setTimeout(loadScanData, 500);
+    setTimeout(refreshAll, 300);
+  }
 });
 </script>
 </body>
