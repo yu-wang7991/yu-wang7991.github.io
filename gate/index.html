@@ -316,11 +316,15 @@ function renderSite(data){
   el.className = 'gate-item ' + (data.isOpen ? 'open' : 'closed');
 
   const nameEl = el.querySelector('.gate-name');
-  nameEl.innerHTML = `<span class="dot ${data.isOpen ? 'red' : 'green'}"></span>${data.site.name}`;
+  if(nameEl) nameEl.innerHTML = `<span class="dot ${data.isOpen ? 'red' : 'green'}"></span>${data.site.name}`;
 
   const tagEl = el.querySelector('.status-tag');
-  tagEl.className = 'status-tag ' + (data.isOpen ? 'open' : 'closed');
-  tagEl.textContent = data.isOpen ? '放水中' : '无流量';
+  if(tagEl){
+    tagEl.className = 'status-tag ' + (data.isOpen ? 'open' : 'closed');
+    tagEl.textContent = data.isOpen ? '放水中' : '无流量';
+  }
+
+  if(IS_HTTPS) return; // HTTPS下不更新图片数据
 
   const dataEl = el.querySelector('.gate-data');
 
@@ -342,8 +346,17 @@ function renderSite(data){
 
 function buildList(){
   const list = document.getElementById('gateList');
-  list.innerHTML = SITES.map(s => `
-    <div class="gate-item" id="g-${s.id}">
+  list.innerHTML = SITES.map(s => {
+    if(IS_HTTPS){
+      return `<div class="gate-item" id="g-${s.id}">
+        <div class="gate-top">
+          <div class="gate-name"><span class="dot green"></span>${s.name}</div>
+          <span class="status-tag unknown">检测中</span>
+        </div>
+        <div class="gate-data">等待扫描数据...</div>
+      </div>`;
+    }
+    return `<div class="gate-item" id="g-${s.id}">
       <div class="gate-top">
         <div class="gate-name"><span class="dot green"></span>${s.name}</div>
         <span class="status-tag unknown">检测中</span>
@@ -359,8 +372,8 @@ function buildList(){
       <div class="gate-link">
         <a href="${BASE}/jssw/warea/showChart?itemid=${s.id}&sltime=0&p=1&c=1" target="_blank">详细曲线 ↗</a>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 function updateStats(){
