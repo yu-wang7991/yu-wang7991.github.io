@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>扬州闸门水情</title>
+<style>
+:root{--bg:#f5f7fa;--card:#fff;--text:#1a1a2e;--sub:#6b7280;--blue:#2563eb;--green:#10b981;--red:#ef4444;--orange:#f59e0b;--border:#e5e7eb;--radius:10px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh;max-width:1000px;margin:0 auto}
+.topbar{background:linear-gradient(135deg,#1e3a5f,#2563eb);color:#fff;padding:16px;position:sticky;top:0;z-index:10}
+.topbar h1{font-size:18px;font-weight:700;margin-bottom:6px}
+.topbar-row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.topbar-row .info{font-size:13px;opacity:.9}
+.topbar-row .btns{display:flex;gap:6px;align-items:center}
+.btn{background:rgba(255,255,255,.2);color:#fff;border:none;padding:4px 10px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap}
+.btn:active{background:rgba(255,255,255,.35)}
+select{background:rgba(255,255,255,.2);color:#fff;border:none;padding:4px 6px;border-radius:6px;font-size:12px}
+select option{color:#333;background:#fff}
+.alert-bar{background:var(--red);color:#fff;text-align:center;padding:10px 16px;font-size:14px;font-weight:600;display:none;cursor:pointer;animation:flash .6s ease-in-out 3}
+@keyframes flash{0%,100%{opacity:1}50%{opacity:.7}}
+.stats{display:flex;gap:10px;padding:12px 16px}
+.stat-card{flex:1;background:var(--card);border-radius:var(--radius);padding:10px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.stat-card .num{font-size:26px;font-weight:800;line-height:1.2}
+.stat-card .num.red{color:var(--red)}
+.stat-card .num.green{color:var(--green)}
+.stat-card .label{font-size:11px;color:var(--sub)}
+.section-title{padding:12px 16px 6px;font-size:13px;color:var(--sub);font-weight:600}
+.gate-list{padding:0 16px 16px;display:grid;grid-template-columns:1fr;gap:8px}
+@media(min-width:641px){.gate-list{grid-template-columns:1fr 1fr;gap:10px}}
+.gate-item{background:var(--card);border-radius:var(--radius);padding:12px 14px;border:1.5px solid transparent;transition:all .2s}
+.gate-item.open{border-color:var(--red);background:#fef2f2}
+.gate-item.closed{border-color:transparent}
+.gate-top{display:flex;align-items:center;justify-content:space-between}
+.gate-name{font-size:15px;font-weight:600;display:flex;align-items:center;gap:6px}
+.gate-name .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.gate-name .dot.green{background:var(--green)}
+.gate-name .dot.red{background:var(--red);box-shadow:0 0 6px var(--red);animation:blink 1.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+.status-tag{font-size:12px;padding:2px 8px;border-radius:4px;font-weight:600}
+.status-tag.open{background:#fef2f2;color:var(--red)}
+.status-tag.closed{background:#f0fdf4;color:var(--green)}
+.status-tag.unknown{background:#f9fafb;color:var(--sub)}
+.gate-data{margin-top:6px;font-size:13px;color:var(--sub);display:flex;gap:12px;flex-wrap:wrap}
+.gate-data span{display:flex;align-items:center;gap:2px}
+.gate-data img{height:14px;vertical-align:middle;border-radius:2px}
+.gate-data .empty{color:#d1d5db}
+.gate-link{margin-top:4px}
+.gate-link a{font-size:11px;color:var(--blue);text-decoration:none}
+.gate-link a:active{opacity:.7}
+.hist-img-wrap{margin-top:8px;border-radius:6px;overflow:hidden;background:#fff;border:1px solid var(--border);cursor:pointer;position:relative}
+.hist-img-wrap img{width:100%;display:block}
+.hist-img-wrap::after{content:'点击放大';position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,.55);color:#fff;font-size:10px;padding:2px 8px;border-radius:4px;pointer-events:none}
+.overlay{display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.85);justify-content:center;align-items:center;flex-direction:column;padding:20px}
+.overlay.show{display:flex}
+.overlay img{max-width:100%;max-height:85vh;border-radius:8px;box-shadow:0 4px 24px rgba(0,0,0,.5)}
+.overlay .cap{color:#fff;font-size:18px;font-weight:600;margin-bottom:12px;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.overlay .hint{color:rgba(255,255,255,.6);font-size:12px;margin-top:10px}
+.overlay .close-btn{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.15);color:#fff;border:none;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.overlay .close-btn:active{background:rgba(255,255,255,.3)}
+.chart-toggle{margin-top:6px;display:flex;gap:4px}
+.chart-toggle .tbtn{font-size:11px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:#fff;color:var(--sub);cursor:pointer}
+.chart-toggle .tbtn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+/* 开闸/关闸记录 */
+.events-list{padding:0 16px 8px}
+.event-day{font-size:12px;color:var(--sub);padding:8px 0 4px;font-weight:600;border-bottom:1px solid var(--border);margin-bottom:6px}
+.event-day:first-child{padding-top:4px}
+.event-item{background:var(--card);border-radius:8px;padding:8px 12px;margin-bottom:5px;display:flex;align-items:center;gap:8px;font-size:13px;border:1px solid var(--border)}
+.event-item .tag{font-size:11px;padding:1px 6px;border-radius:3px;font-weight:600;min-width:38px;text-align:center}
+.event-item .tag.open{background:#fef2f2;color:var(--red)}
+.event-item .tag.close{background:#f0fdf4;color:var(--green)}
+.event-item .etime{font-weight:700;min-width:46px;color:var(--text)}
+.event-item .ename{flex:1;color:var(--text)}
+.event-no-data{padding:12px 0;color:var(--sub);font-size:13px}
+.events-clear{font-size:11px;color:var(--sub);cursor:pointer;margin-left:8px;text-decoration:underline}
+
+.footer{padding:12px 16px;text-align:center;font-size:11px;color:var(--sub)}
+@media(min-width:641px){body{max-width:1000px;font-size:15px}.topbar h1{font-size:20px}.gate-item{padding:14px 18px}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>扬州闸门水情</h1>
+  <div class="topbar-row">
+    <span class="info" id="updateTime">--</span>
+    <div class="btns">
+      <select id="interval">
+        <option value="60">1分</option>
+        <option value="180">3分</option>
+        <option value="300" selected>5分</option>
+        <option value="600">10分</option>
+        <option value="0">手动</option>
+      </select>
+      <button class="btn" id="refreshBtn" onclick="refreshAll()">刷新</button>
+      <button class="btn" id="soundBtn" onclick="toggleSound()">&#x1F514;</button>
+    </div>
+  </div>
+</div>
+
+<div class="alert-bar" id="alertBar" onclick="this.style.display='none'">
+  检测到有站点放水！点击查看
+</div>
+
+<div class="stats">
+  <div class="stat-card">
+    <div class="num" id="totalCount">27</div>
+    <div class="label">监控站点</div>
+  </div>
+  <div class="stat-card">
+    <div class="num red" id="openCount">-</div>
+    <div class="label">当前放水</div>
+  </div>
+  <div class="stat-card">
+    <div class="num green" id="closedCount">-</div>
+    <div class="label">无流量</div>
+  </div>
+</div>
+
+<div class="section-title">今日开闸记录 <span id="eventsCount" style="color:var(--red)"></span><span id="scanTime" style="font-weight:normal;color:var(--sub)"></span></div>
+<div class="events-list" id="eventsList">
+  <div class="event-no-data">加载中...</div>
+</div>
+
+<div class="section-title" style="margin-top:4px">全部站点（卡片内为近24小时水位/流量数据表，第三列为流量）</div>
+<div class="gate-list" id="gateList"></div>
+
+<!-- 全屏遮罩 -->
+<div class="overlay" id="overlay">
+  <button class="close-btn" onclick="closeOverlay()">✕</button>
+  <div class="cap" id="overlayCap"></div>
+  <img id="overlayImg" src="">
+  <div class="hint">点击任意位置或按 ESC 关闭</div>
+</div>
+
+<div class="footer">
+  数据来源：<a href="http://swsq.jswater.org.cn:9088/jsswxxSSI/Web/Default.html?m=2" target="_blank" style="color:var(--blue)">江苏省水情信息系统</a>
+  · 仅供参考
+</div>
+
+<script>
+const BASE='http://swsq.jswater.org.cn:9088/jsswxxSSI';
+
+const SITES=[
+  {id:'030cd76d3fc545aeb4dac8b6fced6478',name:'万福闸'},
+  {id:'07cc368be8b74ba48e592fbbdd1d0c8b',name:'江都抽水(二)站'},
+  {id:'149fae8d0a9c4230879472cdafad1d1f',name:'月塘水库'},
+  {id:'23081b8111e4489889387cc507f7528e',name:'运西闸'},
+  {id:'31450789df184558912573e28f4d1a3d',name:'金湾闸'},
+  {id:'36614aedb66f4885bad242c0ab844ce7',name:'泾河'},
+  {id:'3e0420d8f29b42ae9917455ada34c94c',name:'高邮(大)'},
+  {id:'427c55dfc8dc4f318d609aa2f4c332fd',name:'江都抽水(三)站'},
+  {id:'495532cef2784253af1cf2fe2818e949',name:'南运西闸'},
+  {id:'5a18dfdaed5b425bad5c7a44eb69628c',name:'泗源沟闸'},
+  {id:'61d696b217d74d2a86ab51b2584bf358',name:'宝应'},
+  {id:'65862ec34caa40f3b5d482db004fd6d8',name:'江都引江桥'},
+  {id:'6afa1d325c244279bc1dccd42951590b',name:'三垛'},
+  {id:'7074ab201a9349ad862be11e22d360da',name:'江都东闸'},
+  {id:'84a1b9c9ad274d23b314e785da1ae96f',name:'邵伯(大)'},
+  {id:'903ba7cb9efa40a3b82e79f5669b06be',name:'六闸(三)'},
+  {id:'95d98729bee44693ae2ff0bbecd2e322',name:'江都抽水(一)站'},
+  {id:'af5d9687b7d643958366f0c963b19f4a',name:'瓜州闸'},
+  {id:'bf8f9174623f43a885b11bf32b94b7f6',name:'三江营'},
+  {id:'c8c5d7ae78bd4b139916add09e7b2d0a',name:'山阳'},
+  {id:'c910491b8c0f4c5da2dd7f4bb326a8f5',name:'太平闸'},
+  {id:'cfa3f6da6ce244869117df63f2392298',name:'高邮(高)'},
+  {id:'dcf064414d6a4c76ba900856e1389930',name:'江都抽水(四)站'},
+  {id:'e380bfd3daaa43b3bfdc02ff4bf3bb0a',name:'射阳镇'},
+  {id:'e3da9e6474b74c96ab386694cae417ed',name:'芒稻闸'},
+  {id:'e48e461b6e8f49c19040ed0e7e67b93d',name:'陆庄'},
+  {id:'faa016654a0c4f599c93b5d25372beb3',name:'宜陵闸'}
+];
+
+const gateState = {};
+let soundOn = true, timer = null;
+const actx = new (window.AudioContext || window.webkitAudioContext)();
+
+// ========== 今日开闸记录（从gate_scan.json读取） ==========
+
+let scanData = null;
+
+async function loadScanData() {
+  const el = document.getElementById('eventsList');
+  const countEl = document.getElementById('eventsCount');
+  const timeEl = document.getElementById('scanTime');
+
+  try {
+    // 尝试从本地JSON文件读取
+    const resp = await fetch('gate_scan.json');
+    if (!resp.ok) throw new Error('no scan data');
+    scanData = await resp.json();
+  } catch(e) {
+    // JSON不可用，使用实时检测结果
+    el.innerHTML = '<div class="event-no-data">暂无扫描数据（需运行 gate_scanner.py 生成 gate_scan.json）</div>';
+    countEl.textContent = '';
+    timeEl.textContent = '';
+    return;
+  }
+
+  const flowSites = scanData.flow_sites || [];
+  const sites = scanData.sites || [];
+
+  if (timeEl && scanData.update_time) {
+    timeEl.textContent = '(扫描于 ' + scanData.update_time + ')';
+  }
+
+  if (flowSites.length === 0) {
+    el.innerHTML = '<div class="event-no-data">今日无站点有流量</div>';
+    countEl.textContent = '';
+    return;
+  }
+
+  countEl.textContent = '(' + flowSites.length + '个站点)';
+
+  // 展示有流量的站点
+  let html = '<div class="event-day">今日有流量（点击查看数据表）</div>';
+  flowSites.forEach(name => {
+    const siteInfo = sites.find(s => s.name === name);
+    const isOpen = siteInfo && siteInfo.is_open;
+    html += '<div class="event-item" style="cursor:pointer" onclick="scrollToSite(\'' + name + '\')">' +
+      '<span class="tag ' + (isOpen ? 'open' : '') + '">' + (isOpen ? '放水中' : '已停') + '</span>' +
+      '<span class="ename">' + name + '</span>' +
+      '</div>';
+  });
+
+  el.innerHTML = html;
+}
+
+function scrollToSite(name) {
+  const site = SITES.find(s => s.name === name);
+  if (!site) return;
+  const el = document.getElementById('g-' + site.id);
+  if (el) {
+    el.scrollIntoView({behavior: 'smooth', block: 'center'});
+    el.style.boxShadow = '0 0 0 3px var(--blue)';
+    setTimeout(() => el.style.boxShadow = '', 2000);
+  }
+}
+// ========== 声音与通知 ==========
+
+function beep(){
+  if(!soundOn) return;
+  try{
+    [0,.3,.6].forEach(d => {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.connect(g); g.connect(actx.destination);
+      o.frequency.value = 880; o.type = 'sine';
+      g.gain.setValueAtTime(.3, actx.currentTime + d);
+      g.gain.exponentialRampToValueAtTime(.01, actx.currentTime + d + .25);
+      o.start(actx.currentTime + d); o.stop(actx.currentTime + d + .25);
+    });
+  }catch(e){}
+}
+
+function toggleSound(){
+  soundOn = !soundOn;
+  document.getElementById('soundBtn').textContent = soundOn ? '\u{1F514}' : '\u{1F515}';
+  if(soundOn && actx.state === 'suspended') actx.resume();
+  if(soundOn) beep();
+}
+
+function notify(name){
+  if('Notification' in window && Notification.permission === 'granted'){
+    new Notification('站点放水', {body: name + ' 检测到有流量！'});
+  }
+}
+
+// ========== 检测逻辑 ==========
+
+function checkImage(img){ return img.naturalWidth > 1 && img.naturalHeight > 1; }
+
+function loadImg(id, type){
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => resolve({id, type, hasData: checkImage(img), img});
+    img.onerror = () => resolve({id, type, hasData: false, img: null});
+    img.src = `${BASE}/static/map1/list/0/${type}/${id}.png?t=${Date.now()}`;
+  });
+}
+
+async function checkSite(site){
+  const results = await Promise.all([
+    loadImg(site.id, 2), loadImg(site.id, 3), loadImg(site.id, 4)
+  ]);
+
+  const upstream = results[0];
+  const downstream = results[1];
+  const flow = results[2];
+
+  const wasOpen = gateState[site.id] === 'open';
+  const isOpen = flow.hasData;
+
+  // 检测到状态变化时发出提醒
+  if (gateState[site.id] !== undefined) {
+    if (isOpen && !wasOpen) {
+      beep();
+      notify(site.name);
+      document.getElementById('alertBar').style.display = 'block';
+    }
+  }
+
+  gateState[site.id] = isOpen ? 'open' : 'closed';
+
+  return { site, isOpen, upstream, downstream, flow };
+}
+
+// ========== 渲染 ==========
+
+function renderSite(data){
+  const el = document.getElementById('g-' + data.site.id);
+  if(!el) return;
+
+  el.className = 'gate-item ' + (data.isOpen ? 'open' : 'closed');
+
+  const nameEl = el.querySelector('.gate-name');
+  nameEl.innerHTML = `<span class="dot ${data.isOpen ? 'red' : 'green'}"></span>${data.site.name}`;
+
+  const tagEl = el.querySelector('.status-tag');
+  tagEl.className = 'status-tag ' + (data.isOpen ? 'open' : 'closed');
+  tagEl.textContent = data.isOpen ? '放水中' : '无流量';
+
+  const dataEl = el.querySelector('.gate-data');
+
+  let upstreamHtml = '<span>上游 <span class="empty">--</span></span>';
+  if(data.upstream.hasData) upstreamHtml = `<span>上游 <img src="${data.upstream.img.src}"></span>`;
+
+  let downstreamHtml = '<span>下游 <span class="empty">--</span></span>';
+  if(data.downstream.hasData) downstreamHtml = `<span>下游 <img src="${data.downstream.img.src}"></span>`;
+
+  let flowHtml = '<span>流量 <span class="empty">--</span></span>';
+  if(data.flow.hasData) flowHtml = `<span>流量 <img src="${data.flow.img.src}" style="height:16px"></span>`;
+
+  dataEl.innerHTML = upstreamHtml + downstreamHtml + flowHtml;
+
+  // 更新历史数据表图片
+  const histImg = el.querySelector('.hist-img');
+  if(histImg) histImg.src = `${BASE}/static/map/chart/0/${data.site.id}_list.png?t=${Date.now()}`;
+}
+
+function buildList(){
+  const list = document.getElementById('gateList');
+  list.innerHTML = SITES.map(s => `
+    <div class="gate-item" id="g-${s.id}">
+      <div class="gate-top">
+        <div class="gate-name"><span class="dot green"></span>${s.name}</div>
+        <span class="status-tag unknown">检测中</span>
+      </div>
+      <div class="gate-data">加载中...</div>
+      <div class="chart-toggle">
+        <span class="tbtn active" onclick="switchChart('${s.id}','list',this)">数据表</span>
+        <span class="tbtn" onclick="switchChart('${s.id}','curve',this)">曲线图</span>
+      </div>
+      <div class="hist-img-wrap" onclick="openOverlay('${s.name}',this.querySelector('img').src)">
+        <img class="hist-img" data-list="${BASE}/static/map/chart/0/${s.id}_list.png" data-curve="${BASE}/static/map/chart/0/${s.id}.png" src="${BASE}/static/map/chart/0/${s.id}_list.png" onerror="this.parentElement.style.display='none'">
+      </div>
+      <div class="gate-link">
+        <a href="${BASE}/jssw/warea/showChart?itemid=${s.id}&sltime=0&p=1&c=1" target="_blank">详细曲线 ↗</a>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateStats(){
+  let open = 0, closed = 0;
+  SITES.forEach(s => {
+    if(gateState[s.id] === 'open') open++;
+    else if(gateState[s.id] === 'closed') closed++;
+  });
+  document.getElementById('openCount').textContent = open;
+  document.getElementById('closedCount').textContent = closed;
+  document.getElementById('totalCount').textContent = SITES.length;
+}
+
+function sortList(){
+  const list = document.getElementById('gateList');
+  Array.from(list.children).sort((a, b) => {
+    return (a.classList.contains('open') ? 0 : 1) - (b.classList.contains('open') ? 0 : 1);
+  }).forEach(item => list.appendChild(item));
+}
+
+// ========== 刷新 ==========
+
+async function refreshAll(){
+  const btn = document.getElementById('refreshBtn');
+  btn.disabled = true;
+  btn.textContent = '...';
+  document.getElementById('updateTime').textContent = '刷新中...';
+
+  const results = await Promise.all(SITES.map(s => checkSite(s)));
+  results.forEach(renderSite);
+  updateStats();
+  sortList();
+
+  document.getElementById('updateTime').textContent = '更新: ' + new Date().toLocaleTimeString('zh-CN');
+  btn.disabled = false;
+  btn.textContent = '刷新';
+  scheduleNext();
+}
+
+function scheduleNext(){
+  if(timer) clearTimeout(timer);
+  const v = parseInt(document.getElementById('interval').value);
+  if(v > 0) timer = setTimeout(refreshAll, v * 1000);
+}
+
+// ========== 图表切换 ==========
+
+function switchChart(id, type, btn){
+  const el = document.getElementById('g-' + id);
+  if(!el) return;
+  const img = el.querySelector('.hist-img');
+  const wrap = el.querySelector('.hist-img-wrap');
+  const btns = btn.parentElement.querySelectorAll('.tbtn');
+  btns.forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if(type === 'list'){
+    img.src = img.dataset.list + '?t=' + Date.now();
+  } else {
+    img.src = img.dataset.curve + '?t=' + Date.now();
+  }
+  img.onload = () => { wrap.style.display = ''; };
+  img.onerror = () => { wrap.style.display = 'none'; };
+}
+
+// ========== 全屏遮罩 ==========
+
+function openOverlay(name, src){
+  const ov = document.getElementById('overlay');
+  document.getElementById('overlayCap').textContent = name;
+  document.getElementById('overlayImg').src = src;
+  ov.classList.add('show');
+}
+
+function closeOverlay(){
+  document.getElementById('overlay').classList.remove('show');
+}
+
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape') closeOverlay();
+});
+
+// ========== 初始化 ==========
+
+document.addEventListener('DOMContentLoaded', () => {
+  buildList();
+  document.getElementById('interval').addEventListener('change', scheduleNext);
+  if('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
+  document.getElementById('overlay').addEventListener('click', e => {
+    if(e.target === e.currentTarget) closeOverlay();
+  });
+  // 加载扫描数据（今日有流量站点）
+  setTimeout(loadScanData, 500);
+  // 开始实时检测
+  setTimeout(refreshAll, 300);
+});
+</script>
+</body>
+</html>
