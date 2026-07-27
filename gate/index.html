@@ -118,9 +118,9 @@ select option{color:#333;background:#fff}
   </div>
 </div>
 
-<div class="section-title">今日开闸记录 <span id="eventsCount" style="color:var(--red)"></span><span id="scanTime" style="font-weight:normal;color:var(--sub)"></span></div>
+<div class="section-title">今日开闸记录 <span id="eventsCount" style="color:var(--red)"></span><span class="events-clear" onclick="clearTodayEvents()">清除</span></div>
 <div class="events-list" id="eventsList">
-  <div class="event-no-data">加载中...</div>
+  <div class="event-no-data">检测中...</div>
 </div>
 
   <div class="section-title" id="siteListTitle" style="margin-top:4px">全部站点</div>
@@ -177,51 +177,59 @@ const gateState = {};
 let soundOn = true, timer = null;
 const actx = new (window.AudioContext || window.webkitAudioContext)();
 
-// ========== 今日开闸记录（从gate_scan.json读取） ==========
+// ========== 今日开闸记录（纯前端 localStorage） ==========
 
-let scanData = null;
+const LS_KEY = 'gate_events_';
 
-async function loadScanData() {
+function getTodayKey(){ return LS_KEY + new Date().toISOString().slice(0,10); }
+
+function getTodayEvents(){
+  try{
+    const d = JSON.parse(localStorage.getItem(getTodayKey()));
+    return Array.isArray(d) ? d : [];
+  }catch(e){ return []; }
+}
+
+function saveTodayEvents(events){
+  localStorage.setItem(getTodayKey(), JSON.stringify(events));
+}
+
+function addEvent(name, type){ // type: 'open' or 'close'
+  const events = getTodayEvents();
+  const now = new Date();
+  const ts = now.toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'});
+  // 同一站点同一事件30秒内去重
+  const last = events.filter(e => e.name === name).pop();
+  if(last && last.type === type && last.time === ts) return;
+  events.push({name, type, time: ts, ts: now.getTime()});
+  saveTodayEvents(events);
+  renderEvents();
+}
+
+function clearTodayEvents(){
+  localStorage.removeItem(getTodayKey());
+  renderEvents();
+}
+
+function renderEvents(){
   const el = document.getElementById('eventsList');
   const countEl = document.getElementById('eventsCount');
-  const timeEl = document.getElementById('scanTime');
+  const events = getTodayEvents();
 
-  try {
-    // 尝试从本地JSON文件读取
-    const resp = await fetch('gate_scan.json');
-    if (!resp.ok) throw new Error('no scan data');
-    scanData = await resp.json();
-  } catch(e) {
-    // JSON不可用，使用实时检测结果
-    el.innerHTML = '<div class="event-no-data">暂无扫描数据（需运行 gate_scanner.py 生成 gate_scan.json）</div>';
-    countEl.textContent = '';
-    timeEl.textContent = '';
-    return;
-  }
-
-  const flowSites = scanData.flow_sites || [];
-  const sites = scanData.sites || [];
-
-  if (timeEl && scanData.update_time) {
-    timeEl.textContent = '(扫描于 ' + scanData.update_time + ')';
-  }
-
-  if (flowSites.length === 0) {
-    el.innerHTML = '<div class="event-no-data">今日无站点有流量</div>';
+  if(events.length === 0){
+    el.innerHTML = '<div class="event-no-data">今日暂无开闸/关闸记录（页面需保持运行才能捕获状态变化）</div>';
     countEl.textContent = '';
     return;
   }
 
-  countEl.textContent = '(' + flowSites.length + '个站点)';
+  countEl.textContent = '(' + events.length + '条)';
 
-  // 展示有流量的站点
-  let html = '<div class="event-day">今日有流量（点击查看数据表）</div>';
-  flowSites.forEach(name => {
-    const siteInfo = sites.find(s => s.name === name);
-    const isOpen = siteInfo && siteInfo.is_open;
-    html += '<div class="event-item" style="cursor:pointer" onclick="scrollToSite(\'' + name + '\')">' +
-      '<span class="tag ' + (isOpen ? 'open' : '') + '">' + (isOpen ? '放水中' : '已停') + '</span>' +
-      '<span class="ename">' + name + '</span>' +
+  let html = '';
+  events.forEach(e => {
+    html += '<div class="event-item" style="cursor:pointer" onclick="scrollToSite(\'' + e.name + '\')">' +
+      '<span class="tag ' + (e.type === 'open' ? 'open' : 'close') + '">' + (e.type === 'open' ? '开闸' : '关闸') + '</span>' +
+      '<span class="etime">' + e.time + '</span>' +
+      '<span class="ename">' + e.name + '</span>' +
       '</div>';
   });
 
@@ -293,13 +301,20 @@ async function checkSite(site){
   const wasOpen = gateState[site.id] === 'open';
   const isOpen = flow.hasData;
 
-  // 检测到状态变化时发出提醒
+  // 检测到状态变化时发出提醒 + 记录事件
   if (gateState[site.id] !== undefined) {
     if (isOpen && !wasOpen) {
       beep();
       notify(site.name);
       document.getElementById('alertBar').style.display = 'block';
+      addEvent(site.name, 'open');
     }
+    if (!isOpen && wasOpen) {
+      addEvent(site.name, 'close');
+    }
+  } else if (isOpen) {
+    // 首次检测就发现有流量，记为开闸
+    addEvent(site.name, 'open');
   }
 
   gateState[site.id] = isOpen ? 'open' : 'closed';
@@ -403,22 +418,12 @@ async function refreshAll(){
   document.getElementById('updateTime').textContent = '刷新中...';
 
   if(IS_HTTPS){
-    // HTTPS环境下图片无法加载，仅依赖gate_scan.json数据
+    // HTTPS环境下图片无法加载，仅展示记录
     SITES.forEach(s => { gateState[s.id] = 'closed'; });
-    if(scanData && scanData.sites){
-      scanData.sites.forEach(s => {
-        const site = SITES.find(x => x.id === s.id);
-        if(site && s.is_open) gateState[s.id] = 'open';
-      });
-    }
     updateStats();
-    sortList();
-    document.getElementById('updateTime').textContent = '更新: ' + (scanData ? scanData.update_time : new Date().toLocaleTimeString('zh-CN'));
+    document.getElementById('updateTime').textContent = '更新: ' + new Date().toLocaleTimeString('zh-CN') + ' (HTTPS)';
     btn.disabled = false;
     btn.textContent = '刷新';
-    // HTTPS下不自动刷新图片
-    const v = parseInt(document.getElementById('interval').value);
-    if(v > 0) timer = setTimeout(refreshAll, v * 1000);
     return;
   }
 
@@ -484,20 +489,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('overlay').addEventListener('click', e => {
     if(e.target === e.currentTarget) closeOverlay();
   });
+  // 渲染今日记录（从localStorage读取，不依赖外部文件）
+  renderEvents();
   if(IS_HTTPS){
-    // HTTPS环境提示
-    document.getElementById('siteListTitle').textContent = '全部站点（HTTPS环境下仅显示扫描数据，详细图片请本地访问）';
-    // 隐藏图片相关UI
+    document.getElementById('siteListTitle').textContent = '全部站点（HTTPS环境下无法实时检测，详细图片请本地访问）';
     document.querySelectorAll('.hist-img-wrap, .chart-toggle, .gate-link').forEach(el => el.style.display = 'none');
-    // 仅加载scan数据
-    setTimeout(async () => {
-      await loadScanData();
-      setTimeout(refreshAll, 200);
-    }, 300);
-  } else {
-    setTimeout(loadScanData, 500);
-    setTimeout(refreshAll, 300);
   }
+  setTimeout(refreshAll, 300);
 });
 </script>
 </body>
