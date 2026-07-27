@@ -140,8 +140,11 @@ select option{color:#333;background:#fff}
 </div>
 
 <script>
-const BASE='http://swsq.jswater.org.cn:9088/jsswxxSSI';
+const HTTP_BASE='http://swsq.jswater.org.cn:9088/jsswxxSSI';
+// HTTPS代理地址 — 部署Cloudflare Worker后替换为你的Worker URL
+const PROXY_BASE='https://swsq-proxy.0680041.workers.dev';
 const IS_HTTPS = location.protocol === 'https:';
+const BASE = IS_HTTPS ? PROXY_BASE : HTTP_BASE;
 
 const SITES=[
   {id:'030cd76d3fc545aeb4dac8b6fced6478',name:'万福闸'},
@@ -177,7 +180,7 @@ const gateState = {};
 let soundOn = true, timer = null;
 const actx = new (window.AudioContext || window.webkitAudioContext)();
 
-// ========== 今日开闸记录（纯前端 localStorage） ==========
+// ========== 最近三天开闸/关闸记录（纯前端 localStorage） ==========
 
 const LS_KEY = 'gate_events_';
 
@@ -304,7 +307,6 @@ function checkImage(img){ return img.naturalWidth > 1 && img.naturalHeight > 1; 
 
 function loadImg(id, type){
   return new Promise(resolve => {
-    if(IS_HTTPS) return resolve({id, type, hasData: false, img: null, blocked: true});
     const img = new Image();
     img.onload = () => resolve({id, type, hasData: checkImage(img), img});
     img.onerror = () => resolve({id, type, hasData: false, img: null});
@@ -362,8 +364,6 @@ function renderSite(data){
     tagEl.textContent = data.isOpen ? '放水中' : '无流量';
   }
 
-  if(IS_HTTPS) return; // HTTPS下不更新图片数据
-
   const dataEl = el.querySelector('.gate-data');
 
   let upstreamHtml = '<span>上游 <span class="empty">--</span></span>';
@@ -385,15 +385,6 @@ function renderSite(data){
 function buildList(){
   const list = document.getElementById('gateList');
   list.innerHTML = SITES.map(s => {
-    if(IS_HTTPS){
-      return `<div class="gate-item" id="g-${s.id}">
-        <div class="gate-top">
-          <div class="gate-name"><span class="dot green"></span>${s.name}</div>
-          <span class="status-tag unknown">检测中</span>
-        </div>
-        <div class="gate-data">等待扫描数据...</div>
-      </div>`;
-    }
     return `<div class="gate-item" id="g-${s.id}">
       <div class="gate-top">
         <div class="gate-name"><span class="dot green"></span>${s.name}</div>
@@ -439,16 +430,6 @@ async function refreshAll(){
   btn.disabled = true;
   btn.textContent = '...';
   document.getElementById('updateTime').textContent = '刷新中...';
-
-  if(IS_HTTPS){
-    // HTTPS环境下图片无法加载，仅展示记录
-    SITES.forEach(s => { gateState[s.id] = 'closed'; });
-    updateStats();
-    document.getElementById('updateTime').textContent = '更新: ' + new Date().toLocaleTimeString('zh-CN') + ' (HTTPS)';
-    btn.disabled = false;
-    btn.textContent = '刷新';
-    return;
-  }
 
   const results = await Promise.all(SITES.map(s => checkSite(s)));
   results.forEach(renderSite);
@@ -514,10 +495,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   // 渲染最近三天记录（从localStorage读取，不依赖外部文件）
   renderEvents();
-  if(IS_HTTPS){
-    document.getElementById('siteListTitle').textContent = '全部站点（HTTPS环境下无法实时检测，详细图片请本地访问）';
-    document.querySelectorAll('.hist-img-wrap, .chart-toggle, .gate-link').forEach(el => el.style.display = 'none');
-  }
   setTimeout(refreshAll, 300);
 });
 </script>
