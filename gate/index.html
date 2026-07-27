@@ -118,7 +118,7 @@ select option{color:#333;background:#fff}
   </div>
 </div>
 
-<div class="section-title">今日开闸记录 <span id="eventsCount" style="color:var(--red)"></span><span class="events-clear" onclick="clearTodayEvents()">清除</span></div>
+<div class="section-title">最近三天开闸记录 <span id="eventsCount" style="color:var(--red)"></span><span class="events-clear" onclick="clearAllEvents()">清除全部</span></div>
 <div class="events-list" id="eventsList">
   <div class="event-no-data">检测中...</div>
 </div>
@@ -181,11 +181,13 @@ const actx = new (window.AudioContext || window.webkitAudioContext)();
 
 const LS_KEY = 'gate_events_';
 
-function getTodayKey(){ return LS_KEY + new Date().toISOString().slice(0,10); }
+function getDateKey(date){ return LS_KEY + date.toISOString().slice(0,10); }
 
-function getTodayEvents(){
+function getTodayKey(){ return getDateKey(new Date()); }
+
+function getEventsByDate(date){
   try{
-    const d = JSON.parse(localStorage.getItem(getTodayKey()));
+    const d = JSON.parse(localStorage.getItem(getDateKey(date)));
     return Array.isArray(d) ? d : [];
   }catch(e){ return []; }
 }
@@ -195,7 +197,7 @@ function saveTodayEvents(events){
 }
 
 function addEvent(name, type){ // type: 'open' or 'close'
-  const events = getTodayEvents();
+  const events = getEventsByDate(new Date());
   const now = new Date();
   const ts = now.toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'});
   // 同一站点同一事件30秒内去重
@@ -206,31 +208,52 @@ function addEvent(name, type){ // type: 'open' or 'close'
   renderEvents();
 }
 
-function clearTodayEvents(){
-  localStorage.removeItem(getTodayKey());
+function clearAllEvents(){
+  // 清除最近3天的记录
+  for(let i = 0; i < 3; i++){
+    const d = new Date(); d.setDate(d.getDate() - i);
+    localStorage.removeItem(getDateKey(d));
+  }
   renderEvents();
 }
 
 function renderEvents(){
   const el = document.getElementById('eventsList');
   const countEl = document.getElementById('eventsCount');
-  const events = getTodayEvents();
 
-  if(events.length === 0){
-    el.innerHTML = '<div class="event-no-data">今日暂无开闸/关闸记录（页面需保持运行才能捕获状态变化）</div>';
+  // 读取最近3天的记录
+  const dayGroups = [];
+  let total = 0;
+  for(let i = 0; i < 3; i++){
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().slice(0,10);
+    const events = getEventsByDate(d);
+    if(events.length > 0){
+      dayGroups.push({dateStr, events});
+      total += events.length;
+    }
+  }
+
+  if(total === 0){
+    el.innerHTML = '<div class="event-no-data">最近三天暂无开闸/关闸记录（页面需保持运行才能捕获状态变化）</div>';
     countEl.textContent = '';
     return;
   }
 
-  countEl.textContent = '(' + events.length + '条)';
+  countEl.textContent = '(' + total + '条)';
 
+  const today = new Date().toISOString().slice(0,10);
   let html = '';
-  events.forEach(e => {
-    html += '<div class="event-item" style="cursor:pointer" onclick="scrollToSite(\'' + e.name + '\')">' +
-      '<span class="tag ' + (e.type === 'open' ? 'open' : 'close') + '">' + (e.type === 'open' ? '开闸' : '关闸') + '</span>' +
-      '<span class="etime">' + e.time + '</span>' +
-      '<span class="ename">' + e.name + '</span>' +
-      '</div>';
+  dayGroups.forEach(g => {
+    const label = g.dateStr === today ? '今天' : g.dateStr;
+    html += '<div class="event-day">' + label + '</div>';
+    g.events.forEach(e => {
+      html += '<div class="event-item" style="cursor:pointer" onclick="scrollToSite(\'' + e.name + '\')">' +
+        '<span class="tag ' + (e.type === 'open' ? 'open' : 'close') + '">' + (e.type === 'open' ? '开闸' : '关闸') + '</span>' +
+        '<span class="etime">' + e.time + '</span>' +
+        '<span class="ename">' + e.name + '</span>' +
+        '</div>';
+    });
   });
 
   el.innerHTML = html;
@@ -489,7 +512,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('overlay').addEventListener('click', e => {
     if(e.target === e.currentTarget) closeOverlay();
   });
-  // 渲染今日记录（从localStorage读取，不依赖外部文件）
+  // 渲染最近三天记录（从localStorage读取，不依赖外部文件）
   renderEvents();
   if(IS_HTTPS){
     document.getElementById('siteListTitle').textContent = '全部站点（HTTPS环境下无法实时检测，详细图片请本地访问）';
