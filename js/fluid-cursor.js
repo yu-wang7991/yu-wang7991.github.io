@@ -980,7 +980,6 @@ function updateKeywords () {
 updateKeywords();
 resizeCanvas();
 initFramebuffers();
-multipleSplats(parseInt(Math.random() * 10) + 5);
 
 let lastUpdateTime = Date.now();
 let colorUpdateTimer = 0.0;
