@@ -47,7 +47,7 @@ let config = {
     SIM_RESOLUTION: 128,
     DYE_RESOLUTION: 1024,
     CAPTURE_RESOLUTION: 512,
-    DENSITY_DISSIPATION: 1.0,
+    DENSITY_DISSIPATION: 0.6,
     VELOCITY_DISSIPATION: 0.3,
     PRESSURE: 0.8,
     PRESSURE_ITERATIONS: 20,
@@ -63,12 +63,12 @@ let config = {
     BLOOM: true,
     BLOOM_ITERATIONS: 8,
     BLOOM_RESOLUTION: 256,
-    BLOOM_INTENSITY: 0.8,
-    BLOOM_THRESHOLD: 0.6,
-    BLOOM_SOFT_KNEE: 0.7,
+    BLOOM_INTENSITY: 0.2,
+    BLOOM_THRESHOLD: 0.95,
+    BLOOM_SOFT_KNEE: 0.2,
     SUNRAYS: true,
     SUNRAYS_RESOLUTION: 196,
-    SUNRAYS_WEIGHT: 1.0,
+    SUNRAYS_WEIGHT: 0.5,
 }
 
 function pointerPrototype () {
@@ -984,6 +984,8 @@ multipleSplats(parseInt(Math.random() * 10) + 5);
 
 let lastUpdateTime = Date.now();
 let colorUpdateTimer = 0.0;
+// Initial splats so the page has fluid effect on load
+multipleSplats(parseInt(Math.random() * 10) + 5);
 update();
 
 function update () {
@@ -1124,30 +1126,6 @@ function render (target) {
     drawDisplay(fbo, width, height);
 }
 
-    let width = target == null ? gl.drawingBufferWidth : target.width;
-    let height = target == null ? gl.drawingBufferHeight : target.height;
-    gl.viewport(0, 0, width, height);
-
-    let fbo = target == null ? null : target.fbo;
-
-    if (target == null && config.TRANSPARENT) {
-        // Blog embedding: clear to transparent, draw fluid with premultiplied alpha
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-        gl.enable(gl.BLEND);
-    } else if (target == null || !config.TRANSPARENT) {
-        gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-        gl.enable(gl.BLEND);
-        if (!config.TRANSPARENT)
-            drawColor(fbo, normalizeColor(config.BACK_COLOR));
-    } else {
-        gl.disable(gl.BLEND);
-    }
-
-    drawDisplay(fbo, width, height);
-}
-
 function drawColor (fbo, color) {
     colorProgram.bind();
     gl.uniform4f(colorProgram.uniforms.color, color.r, color.g, color.b, 1);
@@ -1255,7 +1233,8 @@ function blur (target, temp, iterations) {
 function splatPointer (pointer) {
     let dx = pointer.deltaX * config.SPLAT_FORCE;
     let dy = pointer.deltaY * config.SPLAT_FORCE;
-    splat(pointer.texcoordX, pointer.texcoordY, dx, dy, pointer.color);
+    let color = { r: pointer.color.r * 5.0, g: pointer.color.g * 5.0, b: pointer.color.b * 5.0 };
+    splat(pointer.texcoordX, pointer.texcoordY, dx, dy, color);
 }
 
 function multipleSplats (amount) {
