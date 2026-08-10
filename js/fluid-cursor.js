@@ -29,7 +29,7 @@ pointer-events:none, no dat.GUI, hover-triggered splats.
 
 // Create canvas element and inject into page
 const canvas = document.createElement('canvas');
-canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:9999;opacity:0.7;';
+canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:9999;mix-blend-mode:screen;';
 document.body.appendChild(canvas);
 
 function resizeCanvas () {
@@ -47,23 +47,23 @@ let config = {
     SIM_RESOLUTION: 128,
     DYE_RESOLUTION: 1024,
     CAPTURE_RESOLUTION: 512,
-    DENSITY_DISSIPATION: 1.5,
+    DENSITY_DISSIPATION: 1.0,
     VELOCITY_DISSIPATION: 0.3,
     PRESSURE: 0.8,
     PRESSURE_ITERATIONS: 20,
     CURL: 20,
-    SPLAT_RADIUS: 0.3,
-    SPLAT_FORCE: 3000,
+    SPLAT_RADIUS: 0.25,
+    SPLAT_FORCE: 6000,
     SHADING: true,
     COLORFUL: true,
     COLOR_UPDATE_SPEED: 10,
     PAUSED: false,
     BACK_COLOR: { r: 0, g: 0, b: 0 },
-    TRANSPARENT: true,
+    TRANSPARENT: false,
     BLOOM: true,
     BLOOM_ITERATIONS: 8,
     BLOOM_RESOLUTION: 256,
-    BLOOM_INTENSITY: 1.0,
+    BLOOM_INTENSITY: 0.8,
     BLOOM_THRESHOLD: 0.6,
     BLOOM_SOFT_KNEE: 0.7,
     SUNRAYS: true,
@@ -980,7 +980,7 @@ function updateKeywords () {
 updateKeywords();
 resizeCanvas();
 initFramebuffers();
-multipleSplats(parseInt(Math.random() * 10) + 3);
+multipleSplats(parseInt(Math.random() * 10) + 5);
 
 let lastUpdateTime = Date.now();
 let colorUpdateTimer = 0.0;
@@ -1121,7 +1121,30 @@ function render (target) {
     let fbo = target == null ? null : target.fbo;
     if (!config.TRANSPARENT)
         drawColor(fbo, normalizeColor(config.BACK_COLOR));
-    // No checkerboard for blog embedding - skip it
+    drawDisplay(fbo, width, height);
+}
+
+    let width = target == null ? gl.drawingBufferWidth : target.width;
+    let height = target == null ? gl.drawingBufferHeight : target.height;
+    gl.viewport(0, 0, width, height);
+
+    let fbo = target == null ? null : target.fbo;
+
+    if (target == null && config.TRANSPARENT) {
+        // Blog embedding: clear to transparent, draw fluid with premultiplied alpha
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+        gl.enable(gl.BLEND);
+    } else if (target == null || !config.TRANSPARENT) {
+        gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+        gl.enable(gl.BLEND);
+        if (!config.TRANSPARENT)
+            drawColor(fbo, normalizeColor(config.BACK_COLOR));
+    } else {
+        gl.disable(gl.BLEND);
+    }
+
     drawDisplay(fbo, width, height);
 }
 
@@ -1385,12 +1408,11 @@ function generateColor () {
     return c;
 }
 
-// Boost color for mix-blend-mode:screen visibility (black bg + screen = transparent)
 function generateSplatsColor () {
     let c = HSVtoRGB(Math.random(), 1.0, 1.0);
-    c.r *= 0.6;
-    c.g *= 0.6;
-    c.b *= 0.6;
+    c.r *= 10.0;
+    c.g *= 10.0;
+    c.b *= 10.0;
     return c;
 }
 
