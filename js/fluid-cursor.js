@@ -1232,16 +1232,16 @@ function blur (target, temp, iterations) {
 function splatPointer (pointer) {
     let dx = pointer.deltaX * config.SPLAT_FORCE;
     let dy = pointer.deltaY * config.SPLAT_FORCE;
-    let color = { r: pointer.color.r * 2.5, g: pointer.color.g * 2.5, b: pointer.color.b * 2.5 };
+    let color = { r: pointer.color.r * 1.2, g: pointer.color.g * 1.2, b: pointer.color.b * 1.2 };
     splat(pointer.texcoordX, pointer.texcoordY, dx, dy, color);
 }
 
 function multipleSplats (amount) {
     for (let i = 0; i < amount; i++) {
         const color = generateColor();
-        color.r *= 5.0;
-        color.g *= 5.0;
-        color.b *= 5.0;
+        color.r *= 2.5;
+        color.g *= 2.5;
+        color.b *= 2.5;
         const x = Math.random();
         const y = Math.random();
         const dx = 1000 * (Math.random() - 0.5);
@@ -1388,9 +1388,9 @@ function generateColor () {
 
 function generateSplatsColor () {
     let c = HSVtoRGB(Math.random(), 1.0, 1.0);
-    c.r *= 5.0;
-    c.g *= 5.0;
-    c.b *= 5.0;
+    c.r *= 2.5;
+    c.g *= 2.5;
+    c.b *= 2.5;
     return c;
 }
 
